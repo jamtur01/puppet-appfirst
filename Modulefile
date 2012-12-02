@@ -1,0 +1,8 @@
+name    'puppet-appfirst'
+version '0.0.1'
+source 'https://github.com/jamtur01/puppet-appfirst'
+author 'James Turnbull'
+license 'Apache License, Version 2.0'
+summary 'Installs and manages AppFirst collectors and checks'
+description ''
+project_page 'https://github.com/jamtur01/puppet-appfirst'
