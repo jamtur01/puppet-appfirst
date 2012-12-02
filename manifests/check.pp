@@ -6,18 +6,9 @@
 #
 # Document parameters here.
 #
-# [*appfirst_id*]
-#   Your AppFirst ID, for example 123456. This is a required parameter.
-#
-# [*prereq*]
-#   The prerequisite packages required to install the collector. Optional.
-#
-# [*package_source*]
-#   The AppFirst team use a constructed URL to deliver packages. Optional.
-#
 # === Examples
 #
-#  class { appfirst:
+#  class { appfirst::check:
 #    appfirst_id => '123456'
 #  }
 #
@@ -30,38 +21,61 @@
 # Copyright 2012 James Turnbull
 #
 class appfirst::check(
+  $appfirst_dir        = $appfirst::params::appfirst_dir, 
   $nrpe_config_dir     = $appfirst::params::nrpe_config_dir,
   $nrpe_config         = $appfirst::params::nrpe_config,
   $nrpe_scripts_dir    = $appfirst::params::nrpe_scripts_dir,
-  $nrpe_script         = $appfirst::params::nrpe_script,
-  $appfirst_id         = $appfirst::params::appfirst_id,
   $owner               = $appfirst::params::owner,
   $group               = $appfirst::params::group,
+  $command,
+  $warning,
+  $critical,
+  $options,
+  $nrpe_script,
 ) inherits appfirst::params {
 
+  include appfirst
+
+  File {
+    owner   => $owner,
+    group   => $group,
+  }
+
+  file { $appfirst_dir:
+    ensure  => directory,
+    mode    => '0755',
+  }
+
+  file { "${appfirst_dir}/plugins":
+    ensure  => directory,
+    mode    => '0755',
+    require => File[$appfirst_dir],
+  }
+
   file { [ $nrpe_config_dir, $nrpe_scripts_dir ]:
-    ensure => directory,
-    owner  => $owner,
-    group  => $group,
-    mode   => '0755',
+    ensure  => directory,
+    mode    => '0755',
+    require => File["${appfirst_dir}/plugins"],
   }
 
   file { $nrpe_config:
     ensure => present,
-    owner  => $owner,
-    group  => $group,
   }
 
   file { "${nrpe_scripts_dir}/${nrpe_script}":
     ensure  => present,
-    source  => '',
-    require => [ File[$nrpe_scripts_dir], File[$nrpe_config] ],
+    source  => "puppet:///modules/appfirst/${nrpe_script}",
+    require => [ File[$nrpe_scripts_dir], File[$nrpe_config_dir] ],
     notify  => Service['afcollector'],
   }
 
-  exec { "echo 'command[#{new_resource.command}]=#{nrpe_scripts_dir}/#{new_resource.script_name} #{new_resource.options} -w #{new_resource.warning} -c #{new_resource.critical}' >> #{nrpe_config}":
-    notify  => Service['afcollector'],
-    onlyif  => "cat #{nrpe_config} | grep -- #{new_resource.script_name}",
-  } ## ParsedFile type?
-
+  appfirst_check { $nrpe_script:
+    ensure      => present,
+    command     => $command,
+    options     => $options,
+    warning     => $warning,
+    critical    => $critical,
+    require     => File["${nrpe_scripts_dir}/${nrpe_script}"],
+    notify      => Service['afcollector'],
+  }
 }

@@ -33,6 +33,7 @@ class appfirst(
   $appfirst_id         = $appfirst::params::appfirst_id,
   $prereq              = $appfirst::params::prereq,
   $package_source      = $appfirst::params::package_source,
+  $provider            = $appfirst::params::provider
 ) inherits appfirst::params {
 
   package { $prereq:
@@ -40,14 +41,15 @@ class appfirst(
   }
 
   package { 'appfirst':
-    ensure  => present,
-    source  => '???',
-    require => Package[$prereq],
+    ensure   => present,
+    source   => $package_source,
+    require  => Package[$prereq],
+    provider => $provider
   }
 
   service { 'afcollector':
     ensure  => running,
-    enabled => true,
+    enable  => true,
     require => Package['appfirst'],
   }
 }
