@@ -8,8 +8,7 @@
 #
 # === Examples
 #
-#  class { appfirst::check:
-#    appfirst_id => '123456'
+#  appfirst::check { 'check_title':
 #  }
 #
 # === Authors
@@ -20,62 +19,39 @@
 #
 # Copyright 2012 James Turnbull
 #
-class appfirst::check(
-  $appfirst_dir        = $appfirst::params::appfirst_dir, 
-  $nrpe_config_dir     = $appfirst::params::nrpe_config_dir,
-  $nrpe_config         = $appfirst::params::nrpe_config,
-  $nrpe_scripts_dir    = $appfirst::params::nrpe_scripts_dir,
+define appfirst::check(
+  $command             = '',
+  $warning             = '',
+  $critical            = '',
+  $options             = '',
   $owner               = $appfirst::params::owner,
   $group               = $appfirst::params::group,
-  $command,
-  $warning,
-  $critical,
-  $options,
-  $nrpe_script,
-) inherits appfirst::params {
+  $nrpe_config_dir     = $appfirst::params::nrpe_config_dir,
+  $nrpe_scripts_dir    = $appfirst::params::nrpe_scripts_dir,
+) {
 
   include appfirst
+  include appfirst::params
 
   File {
     owner   => $owner,
     group   => $group,
   }
 
-  file { $appfirst_dir:
-    ensure  => directory,
-    mode    => '0755',
-  }
-
-  file { "${appfirst_dir}/plugins":
-    ensure  => directory,
-    mode    => '0755',
-    require => File[$appfirst_dir],
-  }
-
-  file { [ $nrpe_config_dir, $nrpe_scripts_dir ]:
-    ensure  => directory,
-    mode    => '0755',
-    require => File["${appfirst_dir}/plugins"],
-  }
-
-  file { $nrpe_config:
-    ensure => present,
-  }
-
-  file { "${nrpe_scripts_dir}/${nrpe_script}":
+  file { "${nrpe_scripts_dir}/${title}":
     ensure  => present,
-    source  => "puppet:///modules/appfirst/${nrpe_script}",
+    source  => "puppet:///modules/appfirst/${title}",
     require => [ File[$nrpe_scripts_dir], File[$nrpe_config_dir] ],
     notify  => Service['afcollector'],
   }
 
-  appfirst_check { $nrpe_script:
+  appfirst_check { $title:
     ensure      => present,
     command     => $command,
     options     => $options,
     warning     => $warning,
     critical    => $critical,
-    require     => File["${nrpe_scripts_dir}/${nrpe_script}"],
+    require     => File["${nrpe_scripts_dir}/${title}"],
     notify      => Service['afcollector'],
   }
 }

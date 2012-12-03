@@ -35,18 +35,17 @@ To install the AppFirst collector declare the `appfirst` class.
 
 2.  Run the Puppet client and sync the type and provider as a plugin
 
-3.  You can then use the type and provider through the provided `appfirst::check` wraper class like so:
+3.  You can then use the type and provider through the provided `appfirst::check` defined type like so:
 
-        class { 'appfirst_check':
-          nrpe_script => 'name_of_your_script',
+        appfirst::check { 'nameofcheck':
           command     => 'thecommandtobeexecuted',
           warning     => '10',
           critical    => '20',
           options     => 'optionalflags',
         }
 
-    The script specified in the `nrpe_script` option should be placed in the `files` directory
-    of the `appfirst` module.  
+    The script specified in the title of the defined type (here "nameofcheck") should be placed in the `files` directory
+    of the `appfirst` module, for example if your check is called `check_test` Puppet expects a file called `check_test` in the `files` directory.  
 
     Or you can use it via the type and provider itself:
 
@@ -57,6 +56,7 @@ To install the AppFirst collector declare the `appfirst` class.
           warning  => '10',
           critical => '20',
         }
+
 Author
 ------
 

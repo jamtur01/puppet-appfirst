@@ -33,8 +33,19 @@ class appfirst(
   $appfirst_id         = $appfirst::params::appfirst_id,
   $prereq              = $appfirst::params::prereq,
   $package_source      = $appfirst::params::package_source,
-  $provider            = $appfirst::params::provider
+  $provider            = $appfirst::params::provider,
+  $appfirst_dir        = $appfirst::params::appfirst_dir,
+  $nrpe_config_dir     = $appfirst::params::nrpe_config_dir,
+  $nrpe_config         = $appfirst::params::nrpe_config,
+  $nrpe_scripts_dir    = $appfirst::params::nrpe_scripts_dir,
+  $owner               = $appfirst::params::owner,
+  $group               = $appfirst::params::group,
 ) inherits appfirst::params {
+
+  File {
+    owner   => $owner,
+    group   => $group,
+  }
 
   package { $prereq:
     ensure => latest,
@@ -47,9 +58,31 @@ class appfirst(
     provider => $provider
   }
 
+  file { $appfirst_dir:
+    ensure  => directory,
+    mode    => '0755',
+    require => Package['appfirst']
+  }
+
+  file { "${appfirst_dir}/plugins":
+    ensure  => directory,
+    mode    => '0755',
+    require => File[$appfirst_dir],
+  }
+
+  file { [ $nrpe_config_dir, $nrpe_scripts_dir ]:
+    ensure  => directory,
+    mode    => '0755',
+    require => File["${appfirst_dir}/plugins"],
+  }
+
+  file { $nrpe_config:
+    ensure => present,
+  }
+
   service { 'afcollector':
     ensure  => running,
     enable  => true,
-    require => Package['appfirst'],
+    require => [ Package['appfirst'], File[$appfirst_dir] ],
   }
 }
