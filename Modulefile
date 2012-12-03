@@ -1,5 +1,5 @@
 name    'puppet-appfirst'
-version '0.0.1'
+version '0.0.2'
 source 'https://github.com/jamtur01/puppet-appfirst'
 author 'James Turnbull'
 license 'Apache License, Version 2.0'
